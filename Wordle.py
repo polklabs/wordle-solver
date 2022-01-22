@@ -59,7 +59,7 @@ def SolutionCheck(guess, word, t):
         # print('>  ' + output)
     return output
 
-def Solve(guess, word, guessCheck, previous, excludePos, exclude="", include="", t=0):
+def Solve(guess, word, guessCheck, previous, excludePos, exclude="", include="", t=0, callback=SolutionCheck):
     global wordDict
 
     if guessCheck == '':
@@ -70,7 +70,7 @@ def Solve(guess, word, guessCheck, previous, excludePos, exclude="", include="",
     for i in range(len(guess)):
         char = guess[i]
         if guessCheck[i] == '.':
-            if char not in exclude:
+            if char not in exclude and char not in guessCheck:
                 exclude += char
         elif guessCheck[i].islower():
             if char not in include:
@@ -115,7 +115,7 @@ def Solve(guess, word, guessCheck, previous, excludePos, exclude="", include="",
         if allPresent == False:
             continue
 
-        guessCheck = SolutionCheck(g, word, t+1)
+        guessCheck = callback(g, word, t+1)
         if guessCheck == '?':
             continue
         return Solve(g, word, guessCheck, previous, excludePos, exclude, include, t+1)
