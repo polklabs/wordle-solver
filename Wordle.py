@@ -59,7 +59,7 @@ def SolutionCheck(guess, word, t):
         # print('>  ' + output)
     return output
 
-def Solve(guess, word, guessCheck, previous, excludePos, exclude="", include="", t=0, callback=SolutionCheck):
+def Solve(guess, word, guessCheck, previous, excludePos, exclude, include, t, callback):
     global wordDict
 
     if guessCheck == '':
@@ -118,7 +118,7 @@ def Solve(guess, word, guessCheck, previous, excludePos, exclude="", include="",
         guessCheck = callback(g, word, t+1)
         if guessCheck == '?':
             continue
-        return Solve(g, word, guessCheck, previous, excludePos, exclude, include, t+1)
+        return Solve(g, word, guessCheck, previous, excludePos, exclude, include, t+1, callback=callback)
 
     return False
 
@@ -149,9 +149,9 @@ def getStartGuesses(length):
 
     return [l[0] for l in sorted(guesses.items(), key=lambda item: item[1], reverse=True)]
 
-def main(guess, word):
-    guessCheck = SolutionCheck(guess, word, 0)
-    return Solve(guess, word, guessCheck, set(), [""]*len(guess))
+def main(guess, word, callback=SolutionCheck):
+    guessCheck = callback(guess, word, 0)
+    return Solve(guess, word, guessCheck, set(), [""]*len(guess), "", "", 0, callback)
 
 if __name__ == "__main__":
     print("> Loading Words")
