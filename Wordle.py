@@ -23,7 +23,7 @@ def formatDictionary():
 
 def Solve(guess, word, previous, excludePos, exclude="", include="", t=0):
     global wordDict
-    # print(str(t+1) + ': ' + guess)
+    print(str(t+1) + ': ' + guess)
 
     previous.add(guess)
 
@@ -45,7 +45,7 @@ def Solve(guess, word, previous, excludePos, exclude="", include="", t=0):
     regex = ''
     for i in range(len(guess)):
         if word[i] == guess[i]:
-            regex += word[i]
+            regex += guess[i]
         else:
             if guess[i] not in excludePos[i]:
                 excludePos[i] += guess[i]
@@ -54,7 +54,7 @@ def Solve(guess, word, previous, excludePos, exclude="", include="", t=0):
     regex = re.compile(regex)
 
     newGuess = ''
-    for g in wordDict[len(word)]:
+    for g in wordDict[len(guess)]:
 
         # Make sure we aren't guessing the same word again
         # Prevent infinite loops
@@ -124,5 +124,6 @@ if __name__ == "__main__":
 
     word = input("Enter 5 Letter Word: ")
     word = word.lower()
-    guess = getStartGuess(len(word))
+    # guess = getStartGuess(len(word))
+    guess = 'plumb'
     print(main(guess, word))
