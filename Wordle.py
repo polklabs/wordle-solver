@@ -26,9 +26,10 @@ def SolutionCheck(guess, word, t):
     if word == '':
         # Solve with user input
         if t == 0:
-            print('\nNot preset: .')
-            print('Present: a-z')
-            print('Correct: A-Z')
+            print('\nNot preset: "."')
+            print('Present: "a-z"')
+            print('Correct: "A-Z"')
+            print('Not a valid word: "?"')
             print('Solved: ENTER')
         print('\n' + str(t+1) + ': ' + guess)
         output = input('>  ')
@@ -58,10 +59,8 @@ def SolutionCheck(guess, word, t):
         # print('>  ' + output)
     return output
 
-def Solve(guess, word, previous, excludePos, exclude="", include="", t=0):
+def Solve(guess, word, guessCheck, previous, excludePos, exclude="", include="", t=0):
     global wordDict
-
-    guessCheck = SolutionCheck(guess, word, t)
 
     if guessCheck == '':
         if t > 5:
@@ -91,12 +90,11 @@ def Solve(guess, word, previous, excludePos, exclude="", include="", t=0):
     regex = re.compile(regex)
 
     # If we don't know any letters get the next starting guess
-    # guesses = ['plumb', 'wight', 'seron', 'jacky']
-    # if guessCheck.count('.') != len(guessCheck):
-    #     guesses = wordDict[len(guess)]
-    guesses = wordDict[len(guess)]
+    guesses = ['plumb', 'wight', 'seron', 'jacky']
+    if guessCheck.count('.') != len(guessCheck):
+        guesses = wordDict[len(guess)]
+    # guesses = wordDict[len(guess)]
 
-    newGuess = ''
     for g in guesses:
 
         # Make sure we aren't guessing the same word again
@@ -117,11 +115,10 @@ def Solve(guess, word, previous, excludePos, exclude="", include="", t=0):
         if allPresent == False:
             continue
 
-        newGuess = g
-        break
-
-    if newGuess != '':
-        return Solve(newGuess, word, previous, excludePos, exclude, include, t+1)
+        guessCheck = SolutionCheck(g, word, t+1)
+        if guessCheck == '?':
+            continue
+        return Solve(g, word, guessCheck, previous, excludePos, exclude, include, t+1)
 
     return False
 
@@ -139,8 +136,7 @@ def getStartGuesses(length):
     # Sort the letters into a list, most common first
     letters = [l[0] for l in sorted(letterFreq.items(), key=lambda item: item[1], reverse=True)]
 
-    # Get the lowest scoring word
-    # I.E. Word with the most frequest letters
+    # Score all the words based on the frequecy of their letters
     guesses = dict()
     for w in wordDict[length]:
         score = 0
@@ -154,25 +150,18 @@ def getStartGuesses(length):
     return [l[0] for l in sorted(guesses.items(), key=lambda item: item[1], reverse=True)]
 
 def main(guess, word):
-    return Solve(guess, word, set(), [""]*len(guess))
+    guessCheck = SolutionCheck(guess, word, 0)
+    return Solve(guess, word, guessCheck, set(), [""]*len(guess))
 
 if __name__ == "__main__":
     print("> Loading Words")
-    # Load common words first so they're searched first
     loadDictionary('SUBTLEXus74286wordstextversion.txt', 1)
     formatDictionary()
 
     # Always start with this guess
-    # 96.3% Success
+    # 96.3% Success rate
     guess = 'plumb'
 
-    print('[0] Input Word')
-    print('[1] Unknown Word')
-    t = input('> ')
-
-    if t == '0':
-        word = input("Enter 5 Letter Word: ")
-        word = word.lower()
-        print(main(guess, word))
-    else:
-        print(main(guess, ''))
+    word = input("Enter 5 Letter Word or ENTER for unknown: ")
+    word = word.lower()
+    print(main(guess, word))

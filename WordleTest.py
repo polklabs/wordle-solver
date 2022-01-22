@@ -1,13 +1,10 @@
 import json, re
 from multiprocessing import Pool
-from sys import exc_info
 from Wordle import formatDictionary, getStartGuesses, main, loadDictionary, wordDict
 from tqdm import tqdm
 
 loadDictionary('SUBTLEXus74286wordstextversion.txt', 1)
 formatDictionary()
-
-# plumb
 
 def tryWord(guess):
     size = len(guess)
@@ -22,6 +19,7 @@ def tryWord(guess):
 
 def CalcUnknownWords(size=5):
     values = []
+    print('> Starting Pool 1')
     with Pool(12) as p:
         values += p.map(tryWord, getStartGuesses(size)[:120])
 
@@ -31,6 +29,7 @@ def CalcUnknownWords(size=5):
 
     values = sorted(values)
 
+    # List list of words that don't contain any letters from any previous words
     excludeLetters = ''
     results = []
     for i in range(len(values)):
@@ -42,10 +41,11 @@ def CalcUnknownWords(size=5):
         if bool(re.match(regex, value)) == True:
             results.append(value)
             excludeLetters += "".join(set(value))
+
     print('Best starting words')
     print(results)
 
 if __name__ == "__main__":
     # tryWord('about')
     # tryWord('plumb')
-    CalcUnknownWords(6)
+    CalcUnknownWords()
