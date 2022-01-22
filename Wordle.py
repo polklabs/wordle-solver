@@ -21,7 +21,7 @@ def formatDictionary():
     for key in wordDict.keys():
         wordDict[key] = list(wordDict[key])
 
-def Solve(guess, word, previous, exclude="", include="", t=0):
+def Solve(guess, word, previous, excludePos, exclude="", include="", t=0):
     global wordDict
     # print(str(t+1) + ': ' + guess)
 
@@ -29,38 +29,39 @@ def Solve(guess, word, previous, exclude="", include="", t=0):
 
     if guess == word:
         if t > 5:
-            # print(word + '. T=' + str(t+1) + '. Fail')
             return False
         return True
 
     # Get list of required letters
-    # and letters to eclude
+    # and letters to exclude
     for char in guess:
-        if char not in word and char not in exclude:
-            exclude += char
-        if char in word and char not in include:
-            include += char
+        if char not in word:
+            if char not in exclude:
+                exclude += char
+        else:
+            if char not in include:
+                include += char
 
     regex = ''
-    for i in range(len(word)):
+    for i in range(len(guess)):
         if word[i] == guess[i]:
             regex += word[i]
         else:
-            tempInclude = include.replace(guess[i], '')
-            if tempInclude == '':
-                tempInclude = '.'
-            regex += '[^' + exclude + guess[i] + ']'
+            if guess[i] not in excludePos[i]:
+                excludePos[i] += guess[i]
+            regex += '[^' + "".join(set(exclude + excludePos[i])) + ']'
     # print(regex)
-    # print(include)
     regex = re.compile(regex)
 
     newGuess = ''
     for g in wordDict[len(word)]:
 
         # Make sure we aren't guessing the same word again
+        # Prevent infinite loops
         if g in previous:
             continue
 
+        # Filter guesses based on excluded letters
         if bool(re.match(regex, g)) == False:
             continue
 
@@ -69,15 +70,15 @@ def Solve(guess, word, previous, exclude="", include="", t=0):
         for c in include:
             if c not in g:
                 allPresent = False
+                break
         if allPresent == False:
             continue
 
         newGuess = g
         break
 
-
     if newGuess != '':
-        return Solve(newGuess, word, previous, exclude, include, t+1)
+        return Solve(newGuess, word, previous, excludePos, exclude, include, t+1)
 
     return False
 
@@ -107,13 +108,13 @@ def getStartGuesses(length):
         else:
             guesses[w] = score
 
-    return [l[0] for l in sorted(guesses.items(), key=lambda item: item[1])]
+    return [l[0] for l in sorted(guesses.items(), key=lambda item: item[1], reverse=False)]
 
 def getStartGuess(length):
     getStartGuesses(length)[-1]
 
 def main(guess, word):
-    return Solve(guess, word, set())
+    return Solve(guess, word, set(), [""]*len(word))
 
 if __name__ == "__main__":
     print("> Loading Words")
