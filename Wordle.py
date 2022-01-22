@@ -21,30 +21,67 @@ def formatDictionary():
     for key in wordDict.keys():
         wordDict[key] = list(wordDict[key])
 
+def SolutionCheck(guess, word, t):
+    output = ''
+    if word == '':
+        # Solve with user input
+        if t == 0:
+            print('\nNot preset: .')
+            print('Present: a-z')
+            print('Correct: A-Z')
+            print('Solved: ENTER')
+        print('\n' + str(t+1) + ': ' + guess)
+        output = input('>  ')
+    else:
+        # Solve with known input
+        # print(str(t+1) + ': ' + guess)
+        if guess == word:
+            return ''
+
+        # Get all words that aren't exactly correct
+        outTemp = ''
+        for i in range(len(guess)):
+            if guess[i] == word[i]:
+                outTemp += ' '
+            else:
+                outTemp += word[i]
+        
+        # Convert to output string 'i..CE'
+        for i in range(len(guess)):
+            if outTemp[i] != ' ':
+                if guess[i] in outTemp:
+                    output += guess[i]
+                else:
+                    output += '.'
+            else:
+                output += str(guess[i]).upper()
+        # print('>  ' + output)
+    return output
+
 def Solve(guess, word, previous, excludePos, exclude="", include="", t=0):
     global wordDict
-    print(str(t+1) + ': ' + guess)
 
-    previous.add(guess)
+    guessCheck = SolutionCheck(guess, word, t)
 
-    if guess == word:
+    if guessCheck == '':
         if t > 5:
             return False
         return True
 
-    # Get list of required letters
-    # and letters to exclude
-    for char in guess:
-        if char not in word:
+    for i in range(len(guess)):
+        char = guess[i]
+        if guessCheck[i] == '.':
             if char not in exclude:
                 exclude += char
-        else:
+        elif guessCheck[i].islower():
             if char not in include:
                 include += char
 
+    previous.add(guess)
+
     regex = ''
     for i in range(len(guess)):
-        if word[i] == guess[i]:
+        if guessCheck[i].isupper():
             regex += guess[i]
         else:
             if guess[i] not in excludePos[i]:
@@ -53,8 +90,14 @@ def Solve(guess, word, previous, excludePos, exclude="", include="", t=0):
     # print(regex)
     regex = re.compile(regex)
 
+    # If we don't know any letters get the next starting guess
+    # guesses = ['plumb', 'wight', 'seron', 'jacky']
+    # if guessCheck.count('.') != len(guessCheck):
+    #     guesses = wordDict[len(guess)]
+    guesses = wordDict[len(guess)]
+
     newGuess = ''
-    for g in wordDict[len(guess)]:
+    for g in guesses:
 
         # Make sure we aren't guessing the same word again
         # Prevent infinite loops
@@ -108,13 +151,10 @@ def getStartGuesses(length):
         else:
             guesses[w] = score
 
-    return [l[0] for l in sorted(guesses.items(), key=lambda item: item[1], reverse=False)]
-
-def getStartGuess(length):
-    getStartGuesses(length)[-1]
+    return [l[0] for l in sorted(guesses.items(), key=lambda item: item[1], reverse=True)]
 
 def main(guess, word):
-    return Solve(guess, word, set(), [""]*len(word))
+    return Solve(guess, word, set(), [""]*len(guess))
 
 if __name__ == "__main__":
     print("> Loading Words")
@@ -122,8 +162,17 @@ if __name__ == "__main__":
     loadDictionary('SUBTLEXus74286wordstextversion.txt', 1)
     formatDictionary()
 
-    word = input("Enter 5 Letter Word: ")
-    word = word.lower()
-    # guess = getStartGuess(len(word))
+    # Always start with this guess
+    # 96.3% Success
     guess = 'plumb'
-    print(main(guess, word))
+
+    print('[0] Input Word')
+    print('[1] Unknown Word')
+    t = input('> ')
+
+    if t == '0':
+        word = input("Enter 5 Letter Word: ")
+        word = word.lower()
+        print(main(guess, word))
+    else:
+        print(main(guess, ''))
