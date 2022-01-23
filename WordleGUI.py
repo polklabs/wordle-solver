@@ -1,3 +1,4 @@
+from calendar import c
 from tkinter import *
 from Wordle import Wordle
 
@@ -9,23 +10,26 @@ win.geometry('325x490') #setting the size of the window
 win.configure(bg="#121213")
 
 currentRow = 0
-row = []
-rowState = []
-allButtons = []
+row = [] # Buttons in current row
+rowState = [] # States of buttons in current row
+allButtons = [] # List of all buttons for reset
 
-def func(btnRow, column):#function of the button
+def updateState(btnRow, column):
     global currentRow, rowState, row
     if btnRow != currentRow:
         return
+    btn = row[column]
     rowState[column] += 1
     rowState[column] = rowState[column] % 3
     if rowState[column] == 0:
-        row[column]['bg'] = "#3a3a3c"
+        btn['bg'] = "#3a3a3c" # Grey
     if rowState[column] == 1:
-        row[column]['bg'] = "#b59f3b"
+        btn['bg'] = "#b59f3b" # Yellow
     if rowState[column] == 2:
-        row[column]['bg'] = "#538d4e"
+        btn['bg'] = "#538d4e" # Green
 
+# Convert rowState to format the Wordle can use
+# E.X. P.u..
 def getResponse(guess):
     output = ''
     for i in range(len(rowState)):
@@ -38,18 +42,25 @@ def getResponse(guess):
             output += str(guess[i]).upper()
     return output
 
-
 def addRow(guess):
     global currentRow, row, rowState
     row = []
-    rowState = []
+
+    # Reset yellow states
+    for i in range(len(rowState)):
+        if rowState[i] == 1:
+            rowState[i] = 0
+    
     for i in range(len(guess)):
-        char = guess[i]
-        btn=Button(win,text=str(char).upper(), width=2, height=1, pady=0, padx=5, bd=0, font=("Arial bold", 25), bg="#3a3a3c", fg="#d7dadc", command=lambda i=i:func(currentRow, i))
+        btn=Button(win,text=str(guess[i]).upper(), width=2, height=1, pady=0, padx=5, bd=0, font=("Arial bold", 25), bg="#3a3a3c", fg="#d7dadc", command=lambda i=i,currentRow=currentRow:updateState(currentRow, i))
         btn.place(x=16+(i*60),y=20 + (70 * (currentRow)))
         allButtons.append(btn)
         row.append(btn)
-        rowState.append(0)
+
+        # Set button back to Green state
+        if rowState[i] == 2:
+            rowState[i]=1
+            updateState(currentRow, i)
 
 def nextRow():
     global currentRow, wordle
@@ -66,21 +77,21 @@ def next(wordle):
     addRow(wordle.guess)
 
 def reset():
-    global wordle, currentRow, allButtons
+    global wordle, currentRow, allButtons, rowState
     for btn in allButtons:
         btn.destroy()
     allButtons = []
+    rowState = [0]*5
     wordle = Wordle()
     wordle.loadDictionary('SUBTLEXus74286wordstextversion.txt', 1)
     wordle.formatDictionary()
     currentRow = 0
     wordle.main('plumb', '', next)
 
-btn=Button(win,text='NEXT', width=6, height=1, bg="#538d4e", fg="#d7dadc", font=("Arial 10"), command=nextRow)
-btn.place(x=16,y=450)
-
-btn=Button(win,text='RESET', width=6, height=1, bg="#b59f3b", fg="#d7dadc", font=("Arial 10"), command=reset)
-btn.place(x=257,y=450)
+nextBtn=Button(win,text='NEXT', width=6, height=1, bg="#538d4e", fg="#d7dadc", font=("Arial 10"), command=nextRow)
+nextBtn.place(x=16,y=450)
+resetBtn=Button(win,text='RESET', width=6, height=1, bg="#b59f3b", fg="#d7dadc", font=("Arial 10"), command=reset)
+resetBtn.place(x=257,y=450)
 
 reset()
 
