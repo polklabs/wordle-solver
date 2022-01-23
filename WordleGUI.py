@@ -1,6 +1,7 @@
 from calendar import c
 from tkinter import *
 from Wordle import Wordle
+from FiveLetters import wordDictionary
 
 wordle = Wordle()
 
@@ -83,8 +84,7 @@ def reset():
     allButtons = []
     rowState = [0]*5
     wordle = Wordle()
-    wordle.loadDictionary('SUBTLEXus74286wordstextversion.txt', 1)
-    wordle.formatDictionary()
+    wordle.wordDict[5] = wordDictionary
     currentRow = 0
     wordle.main('plumb', '', next)
 

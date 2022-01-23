@@ -1,4 +1,5 @@
 import re
+from FiveLetters import wordDictionary
 
 class Wordle:
     def __init__(self):
@@ -12,8 +13,9 @@ class Wordle:
         self.exclude = ""
         self.include = ""
         self.fail = False
+        self.initialGuesses = ['plumb', 'wight', 'seron', 'jacky']
 
-    def loadDictionary(self, filename, skip=0):
+    def loadDictionary(self, wordSize, filename, skip=0):
         with open(filename, 'r') as f:
             for _ in range(skip):
                 f.readline()
@@ -21,11 +23,10 @@ class Wordle:
             for word in wordList:
                 word = word.split()[0].lower()
                 wLength = len(word)
-                if wLength not in self.wordDict:
-                    self.wordDict[wLength] = dict()
-                self.wordDict[wLength][word] = 1
-
-
+                if wLength == wordSize:
+                    if wLength not in self.wordDict:
+                        self.wordDict[wLength] = dict()
+                    self.wordDict[wLength][word] = 1
 
     def formatDictionary(self):
         for key in self.wordDict.keys():
@@ -100,10 +101,9 @@ class Wordle:
         # print(self.previous)
 
         regex = re.compile(regex)
-
+        guesses = self.initialGuesses
         # If we don't know any letters get the next starting guess
-        guesses = ['plumb', 'wight', 'seron', 'jacky']
-        if self.guessCheck.count('.') != len(self.guessCheck):
+        if self.guessCheck.count('.') != len(self.guessCheck) or len(guesses) == 0:
             guesses = self.wordDict[len(self.guess)]
 
         for g in guesses:
@@ -135,7 +135,7 @@ class Wordle:
 
         return ''
 
-    def getStartGuesses(self, length):
+    def getStartGuesses(self, length, reversed=True):
         global wordDict
         # Get the frequest of each letter for
         # words of length X
@@ -160,24 +160,33 @@ class Wordle:
             else:
                 guesses[w] = score
 
-        return [l[0] for l in sorted(guesses.items(), key=lambda item: item[1], reverse=True)]
+        return [l[0] for l in sorted(guesses.items(), key=lambda item: item[1], reverse=reversed)]
 
     # Always start with this guess
     # 96.3% Success rate
-    def main(self, guess="plumb", word="", callback=SolutionCheck):
+    def main(self, guess="", word="", callback=SolutionCheck):
+        if guess == '':
+            self.guess = self.initialGuesses[0]
+        else:
+            self.guess = guess
         self.callback = callback
         self.word = word
-        self.guess = guess
-        self.guessCheck = self.callback(self)
-        self.excludePos = [""]*len(guess)
+        self.callback(self)
+        self.excludePos = [""]*len(self.guess)
 
 if __name__ == "__main__":
 
     wordle = Wordle()
 
-    print("> Loading Words")
-    wordle.loadDictionary('SUBTLEXus74286wordstextversion.txt', 1)
-    wordle.formatDictionary()
+    # To solve a 5 letter word
+    # Load from py file to include in executable
+    wordle.wordDict[5] = wordDictionary
+
+    # To solve a non 5 letter word
+    # wordLength = 6
+    # wordle.loadDictionary(wordLength, 'SUBTLEXus74286wordstextversion.txt', 1)
+    # wordle.formatDictionary()
+    # wordle.initialGuesses = [wordle.getStartGuesses(wordLength)[0]]
 
     word = input("Enter 5 Letter Word or ENTER for unknown: ")
     word = word.lower()
