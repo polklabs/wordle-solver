@@ -1,167 +1,187 @@
 import re
 
-wordDict = dict()
-failCount = 0
+class Wordle:
+    def __init__(self):
+        self.wordDict = dict()
+        self.failCount = 0
+        self.guess = ''
+        self.word = ''
+        self.t = 0
+        self.previous = set()
+        self.excludePos = []
+        self.exclude = ""
+        self.include = ""
+        self.fail = False
 
-def loadDictionary(filename, skip=0):
-    global wordDict
-    with open(filename, 'r') as f:
-        for _ in range(skip):
-            f.readline()
-        wordList = f.read().splitlines()
-        for word in wordList:
-            word = word.split()[0].lower()
-            wLength = len(word)
-            if wLength not in wordDict:
-                wordDict[wLength] = dict()
-            wordDict[wLength][word] = 1
+    def loadDictionary(self, filename, skip=0):
+        with open(filename, 'r') as f:
+            for _ in range(skip):
+                f.readline()
+            wordList = f.read().splitlines()
+            for word in wordList:
+                word = word.split()[0].lower()
+                wLength = len(word)
+                if wLength not in self.wordDict:
+                    self.wordDict[wLength] = dict()
+                self.wordDict[wLength][word] = 1
 
-def formatDictionary():
-    global wordDict
-    for key in wordDict.keys():
-        wordDict[key] = list(wordDict[key])
 
-def SolutionCheck(guess, word, t):
-    output = ''
-    if word == '':
-        # Solve with user input
-        if t == 0:
-            print('\nNot preset: "."')
-            print('Present: "a-z"')
-            print('Correct: "A-Z"')
-            print('Not a valid word: "?"')
-            print('Solved: ENTER')
-        print('\n' + str(t+1) + ': ' + guess)
-        output = input('>  ')
-    else:
-        # Solve with known input
-        # print(str(t+1) + ': ' + guess)
-        if guess == word:
+
+    def formatDictionary(self):
+        for key in self.wordDict.keys():
+            self.wordDict[key] = list(self.wordDict[key])
+
+    def SolutionCheck(wordle):
+        output = ''
+        if wordle.word == '':
+            # Solve with user input
+            if wordle.t == 0:
+                print('\nNot preset: "."')
+                print('Present: "a-z"')
+                print('Correct: "A-Z"')
+                print('Not a valid word: "?"')
+                print('Solved: ENTER')
+            print('\n' + str(wordle.t+1) + ': ' + wordle.guess)
+            output = input('>  ')
+        else:
+            # Solve with known input
+            # print(str(t+1) + ': ' + guess)
+            if wordle.guess == wordle.word:
+                return ''
+
+            # Get all words that aren't exactly correct
+            outTemp = ''
+            for i in range(len(wordle.guess)):
+                if wordle.guess[i] == wordle.word[i]:
+                    outTemp += ' '
+                else:
+                    outTemp += wordle.word[i]
+            
+            # Convert to output string 'i..CE'
+            for i in range(len(wordle.guess)):
+                if outTemp[i] != ' ':
+                    if wordle.guess[i] in outTemp:
+                        output += wordle.guess[i]
+                    else:
+                        output += '.'
+                else:
+                    output += str(wordle.guess[i]).upper()
+            # print('>  ' + output)
+        wordle.guessCheck = output
+
+    def GetNextGuess(self):
+        if self.guessCheck == '':
+            if self.t > 5:
+                self.fail = True
             return ''
 
-        # Get all words that aren't exactly correct
-        outTemp = ''
-        for i in range(len(guess)):
-            if guess[i] == word[i]:
-                outTemp += ' '
+        for i in range(len(self.guess)):
+            char = self.guess[i]
+            if self.guessCheck[i] == '.':
+                if char not in self.exclude and char not in self.guessCheck:
+                    self.exclude += char
+            elif self.guessCheck[i].islower():
+                if char not in self.include:
+                    self.include += char
+
+        self.previous.add(self.guess)
+
+        regex = ''
+        for i in range(len(self.guess)):
+            if self.guessCheck[i].isupper():
+                regex += self.guess[i]
             else:
-                outTemp += word[i]
+                if self.guess[i] not in self.excludePos[i]:
+                    self.excludePos[i] += self.guess[i]
+                regex += '[^' + "".join(set(self.exclude + self.excludePos[i])) + ']'
         
-        # Convert to output string 'i..CE'
-        for i in range(len(guess)):
-            if outTemp[i] != ' ':
-                if guess[i] in outTemp:
-                    output += guess[i]
-                else:
-                    output += '.'
+        # print(regex)
+        # print(self.include)
+        # print(self.previous)
+
+        regex = re.compile(regex)
+
+        # If we don't know any letters get the next starting guess
+        guesses = ['plumb', 'wight', 'seron', 'jacky']
+        if self.guessCheck.count('.') != len(self.guessCheck):
+            guesses = self.wordDict[len(self.guess)]
+
+        for g in guesses:
+
+            # Make sure we aren't guessing the same word again
+            # Prevent infinite loops
+            if g in self.previous:
+                continue
+
+            # Filter guesses based on excluded letters
+            if bool(re.match(regex, g)) == False:
+                continue
+
+            # Make sure all letters in include list are present
+            allPresent = True
+            for c in self.include:
+                if c not in g:
+                    allPresent = False
+                    break
+            if allPresent == False:
+                continue
+
+            self.guess = g
+            self.t += 1
+            self.callback(self)
+            # if self.guessCheck == '?':
+            #     continue
+            return g
+
+        return ''
+
+    def getStartGuesses(self, length):
+        global wordDict
+        # Get the frequest of each letter for
+        # words of length X
+        letterFreq = dict()
+        for w in self.wordDict[length]:
+            for c in w:
+                if c not in letterFreq:
+                    letterFreq[c] = 0
+                letterFreq[c] += 1
+
+        # Sort the letters into a list, most common first
+        letters = [l[0] for l in sorted(letterFreq.items(), key=lambda item: item[1], reverse=True)]
+
+        # Score all the words based on the frequecy of their letters
+        guesses = dict()
+        for w in self.wordDict[length]:
+            score = 0
+            for c in w:
+                if w.count(c) > 1:
+                    break
+                score += letters.index(c)
             else:
-                output += str(guess[i]).upper()
-        # print('>  ' + output)
-    return output
+                guesses[w] = score
 
-def Solve(guess, word, guessCheck, previous, excludePos, exclude, include, t, callback):
-    global wordDict
-
-    if guessCheck == '':
-        if t > 5:
-            return False
-        return True
-
-    for i in range(len(guess)):
-        char = guess[i]
-        if guessCheck[i] == '.':
-            if char not in exclude and char not in guessCheck:
-                exclude += char
-        elif guessCheck[i].islower():
-            if char not in include:
-                include += char
-
-    previous.add(guess)
-
-    regex = ''
-    for i in range(len(guess)):
-        if guessCheck[i].isupper():
-            regex += guess[i]
-        else:
-            if guess[i] not in excludePos[i]:
-                excludePos[i] += guess[i]
-            regex += '[^' + "".join(set(exclude + excludePos[i])) + ']'
-    # print(regex)
-    regex = re.compile(regex)
-
-    # If we don't know any letters get the next starting guess
-    guesses = ['plumb', 'wight', 'seron', 'jacky']
-    if guessCheck.count('.') != len(guessCheck):
-        guesses = wordDict[len(guess)]
-    # guesses = wordDict[len(guess)]
-
-    for g in guesses:
-
-        # Make sure we aren't guessing the same word again
-        # Prevent infinite loops
-        if g in previous:
-            continue
-
-        # Filter guesses based on excluded letters
-        if bool(re.match(regex, g)) == False:
-            continue
-
-        # Make sure all letters in include list are present
-        allPresent = True
-        for c in include:
-            if c not in g:
-                allPresent = False
-                break
-        if allPresent == False:
-            continue
-
-        guessCheck = callback(g, word, t+1)
-        if guessCheck == '?':
-            continue
-        return Solve(g, word, guessCheck, previous, excludePos, exclude, include, t+1, callback=callback)
-
-    return False
-
-def getStartGuesses(length):
-    global wordDict
-    # Get the frequest of each letter for
-    # words of length X
-    letterFreq = dict()
-    for w in wordDict[length]:
-        for c in w:
-            if c not in letterFreq:
-                letterFreq[c] = 0
-            letterFreq[c] += 1
-
-    # Sort the letters into a list, most common first
-    letters = [l[0] for l in sorted(letterFreq.items(), key=lambda item: item[1], reverse=True)]
-
-    # Score all the words based on the frequecy of their letters
-    guesses = dict()
-    for w in wordDict[length]:
-        score = 0
-        for c in w:
-            if w.count(c) > 1:
-                break
-            score += letters.index(c)
-        else:
-            guesses[w] = score
-
-    return [l[0] for l in sorted(guesses.items(), key=lambda item: item[1], reverse=True)]
-
-def main(guess, word, callback=SolutionCheck):
-    guessCheck = callback(guess, word, 0)
-    return Solve(guess, word, guessCheck, set(), [""]*len(guess), "", "", 0, callback)
-
-if __name__ == "__main__":
-    print("> Loading Words")
-    loadDictionary('SUBTLEXus74286wordstextversion.txt', 1)
-    formatDictionary()
+        return [l[0] for l in sorted(guesses.items(), key=lambda item: item[1], reverse=True)]
 
     # Always start with this guess
     # 96.3% Success rate
-    guess = 'plumb'
+    def main(self, guess="plumb", word="", callback=SolutionCheck):
+        self.callback = callback
+        self.word = word
+        self.guess = guess
+        self.guessCheck = self.callback(self)
+        self.excludePos = [""]*len(guess)
+
+if __name__ == "__main__":
+
+    wordle = Wordle()
+
+    print("> Loading Words")
+    wordle.loadDictionary('SUBTLEXus74286wordstextversion.txt', 1)
+    wordle.formatDictionary()
 
     word = input("Enter 5 Letter Word or ENTER for unknown: ")
     word = word.lower()
-    print(main(guess, word))
+    wordle.main()
+    while wordle.GetNextGuess() != '':
+        pass
+    print('Fail:' + str(wordle.fail))

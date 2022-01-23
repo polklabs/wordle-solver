@@ -1,18 +1,17 @@
-from time import sleep
 from tkinter import *
-from Wordle import formatDictionary, main, loadDictionary
+from Wordle import Wordle
 
-loadDictionary('SUBTLEXus74286wordstextversion.txt', 1)
-formatDictionary()
+wordle = Wordle()
 
 win=Tk() #creating the main window and storing the window object in 'win'
 win.title('Wordle') #setting title of the window
-win.geometry('325x600') #setting the size of the window
-win.configure(bg="white")
+win.geometry('325x416') #setting the size of the window
+win.configure(bg="#121213")
 
 currentRow = 0
 row = []
 rowState = []
+allButtons = []
 
 def func(btnRow, column):#function of the button
     global currentRow, rowState, row
@@ -21,11 +20,11 @@ def func(btnRow, column):#function of the button
     rowState[column] += 1
     rowState[column] = rowState[column] % 3
     if rowState[column] == 0:
-        row[column]['bg'] = "lightgrey"
+        row[column]['bg'] = "#3a3a3c"
     if rowState[column] == 1:
-        row[column]['bg'] = "yellow"
+        row[column]['bg'] = "#b59f3b"
     if rowState[column] == 2:
-        row[column]['bg'] = "lightgreen"
+        row[column]['bg'] = "#538d4e"
 
 def getResponse(guess):
     output = ''
@@ -37,33 +36,50 @@ def getResponse(guess):
             output += guess[i]
         if state == 2:
             output += str(guess[i]).upper()
+    return output
 
 
 def addRow(guess):
     global currentRow, row, rowState
+    row = []
+    rowState = []
     for i in range(len(guess)):
         char = guess[i]
-        btn=Button(win,text=str(char).upper(), width=4, height=2, bg="lightgrey", command=lambda i=i:func(currentRow, i))
-        btn.place(x=20+(i*60),y=30)
+        btn=Button(win,text=str(char).upper(), width=2, height=1, pady=0, padx=5, bd=0, font=("Arial bold", 25), bg="#3a3a3c", fg="#d7dadc", command=lambda i=i:func(currentRow, i))
+        btn.place(x=16+(i*60),y=20 + (70 * (currentRow)))
+        allButtons.append(btn)
         row.append(btn)
         rowState.append(0)
 
 def nextRow():
-    global currentRow
+    global currentRow, wordle
+    if currentRow == 6:
+        return
     currentRow += 1
+    wordle.guessCheck = getResponse(wordle.guess)
+    wordle.GetNextGuess()
 
-def next(guess, word, t):
+def next(wordle):
     global currentRow
-    addRow(guess)
-    while currentRow == t:
-        sleep(1)
-        print('Sleep')
-    return getResponse(guess)
+    addRow(wordle.guess)
 
-btn=Button(win,text='Submit', width=4, height=2, bg="lightgrey", command=nextRow)
-btn.place(x=200,y=60)
+def reset():
+    global wordle, currentRow, allButtons
+    for btn in allButtons:
+        btn.destroy()
+    allButtons = []
+    wordle = Wordle()
+    wordle.loadDictionary('SUBTLEXus74286wordstextversion.txt', 1)
+    wordle.formatDictionary()
+    currentRow = 0
+    wordle.main('plumb', '', next)
 
-word = 'plumb'
-main(word, '', next)
+btn=Button(win,text='NEXT', width=6, height=1, bg="#538d4e", fg="#d7dadc", font=("Arial 10"), command=nextRow)
+btn.place(x=16,y=380)
+
+btn=Button(win,text='RESET', width=6, height=1, bg="#b59f3b", fg="#d7dadc", font=("Arial 10"), command=reset)
+btn.place(x=257,y=380)
+
+reset()
 
 win.mainloop() #running the loop that works as a trigger
