@@ -162,10 +162,10 @@ class Wordle:
 
         return [l[0] for l in sorted(guesses.items(), key=lambda item: item[1], reverse=reversed)]
 
-    # Always start with this guess
-    # 96.3% Success rate
     def main(self, guess="", word="", callback=SolutionCheck):
         if guess == '':
+            # Always start with 'plumb'
+            # 96.3% Success rate
             self.guess = self.initialGuesses[0]
         else:
             self.guess = guess
