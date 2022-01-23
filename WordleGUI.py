@@ -5,7 +5,7 @@ wordle = Wordle()
 
 win=Tk() #creating the main window and storing the window object in 'win'
 win.title('Wordle') #setting title of the window
-win.geometry('325x416') #setting the size of the window
+win.geometry('325x490') #setting the size of the window
 win.configure(bg="#121213")
 
 currentRow = 0
@@ -57,7 +57,9 @@ def nextRow():
         return
     currentRow += 1
     wordle.guessCheck = getResponse(wordle.guess)
-    wordle.GetNextGuess()
+    response = wordle.GetNextGuess()
+    if response == '':
+        currentRow -= 1
 
 def next(wordle):
     global currentRow
@@ -75,10 +77,10 @@ def reset():
     wordle.main('plumb', '', next)
 
 btn=Button(win,text='NEXT', width=6, height=1, bg="#538d4e", fg="#d7dadc", font=("Arial 10"), command=nextRow)
-btn.place(x=16,y=380)
+btn.place(x=16,y=450)
 
 btn=Button(win,text='RESET', width=6, height=1, bg="#b59f3b", fg="#d7dadc", font=("Arial 10"), command=reset)
-btn.place(x=257,y=380)
+btn.place(x=257,y=450)
 
 reset()
 
