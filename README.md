@@ -2,7 +2,9 @@
 Solves the daily Wordle
 
 Run WordleGUI.py to use the interface.
+
 Run Wordle.py for a console program.
+
 Run WordleTest.py for initial word testing purposes.
 
 # Compiling
