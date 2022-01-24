@@ -14,6 +14,7 @@ currentRow = 0
 row = [] # Buttons in current row
 rowState = [] # States of buttons in current row
 allButtons = [] # List of all buttons for reset
+refreshing = False
 
 def updateState(btnRow, column):
     global currentRow, rowState, row
@@ -88,8 +89,17 @@ def reset():
     currentRow = 0
     wordle.main('plumb', '', next)
 
+def refresh():
+    wordle._nextGuess()
+    for i in range(5):
+        row[i]['text'] = str(wordle.guess[i]).upper()
+
 nextBtn=Button(win,text='NEXT', width=6, height=1, bg="#538d4e", fg="#d7dadc", font=("Arial 10"), command=nextRow)
 nextBtn.place(x=16,y=450)
+
+refreshBtn=Button(win,text='REFRESH', width=8, height=1, bg="#3a3a3c", fg="#d7dadc", font=("Arial 10"), command=refresh)
+refreshBtn.place(x=132,y=450)
+
 resetBtn=Button(win,text='RESET', width=6, height=1, bg="#b59f3b", fg="#d7dadc", font=("Arial 10"), command=reset)
 resetBtn.place(x=257,y=450)
 

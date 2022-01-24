@@ -13,6 +13,9 @@ class Wordle:
         self.include = ""
         self.fail = False
         self.initialGuesses = ['plumb', 'wight', 'seron', 'jacky']
+        self.guesses = []
+        self.guessRegex = ''
+        self.guessIndex = 0
 
     def loadDictionary(self, wordSize, filename, skip=0):
         with open(filename, 'r') as f:
@@ -70,6 +73,34 @@ class Wordle:
             # print('>  ' + output)
         wordle.guessCheck = output
 
+    def _nextGuess(self):
+        for i in range(self.guessIndex, len(self.guesses)):
+            self.guessIndex = i
+            g = self.guesses[i]
+
+            # Make sure we aren't guessing the same word again
+            # Prevent infinite loops
+            if g in self.previous:
+                continue
+
+            # Filter guesses based on excluded letters
+            if bool(re.match(self.guessRegex, g)) == False:
+                continue
+
+            # Make sure all letters in include list are present
+            allPresent = True
+            for c in self.include:
+                if c not in g:
+                    allPresent = False
+                    break
+            if allPresent == False:
+                continue
+
+            self.guess = g
+            self.guessIndex = i+1
+            return g
+        return ''
+
     def GetNextGuess(self):
         if self.guessCheck == '':
             if self.t > 5:
@@ -88,53 +119,35 @@ class Wordle:
 
         self.previous.add(self.guess)
 
-        regex = ''
+        self.guessRegex = ''
         for i in range(len(self.guess)):
             if self.guessCheck[i].isupper():
-                regex += self.guess[i]
+                self.guessRegex += self.guess[i]
             else:
                 if self.guess[i] not in self.excludePos[i]:
                     self.excludePos[i] += self.guess[i]
-                regex += '[^' + "".join(set(self.exclude + self.excludePos[i])) + ']'
+                self.guessRegex += '[^' + "".join(set(self.exclude + self.excludePos[i])) + ']'
         
         # print(regex)
         # print(self.include)
         # print(self.previous)
 
-        regex = re.compile(regex)
-        guesses = self.initialGuesses
+        self.guessRegex = re.compile(self.guessRegex)
+        self.guesses = self.initialGuesses
         # If we don't know any letters get the next starting guess
-        if self.guessCheck.count('.') != len(self.guessCheck) or len(guesses) == 0:
-            guesses = self.wordDict[len(self.guess)]
+        if self.guessCheck.count('.') != len(self.guessCheck) or len(self.guesses) == 0:
+            self.guesses = self.wordDict[len(self.guess)]
 
-        for g in guesses:
+        self.guessIndex = 0
+        out = self._nextGuess()
+        self.t += 1
+        self.callback(self)
 
-            # Make sure we aren't guessing the same word again
-            # Prevent infinite loops
-            if g in self.previous:
-                continue
-
-            # Filter guesses based on excluded letters
-            if bool(re.match(regex, g)) == False:
-                continue
-
-            # Make sure all letters in include list are present
-            allPresent = True
-            for c in self.include:
-                if c not in g:
-                    allPresent = False
-                    break
-            if allPresent == False:
-                continue
-
-            self.guess = g
-            self.t += 1
+        while self.guessCheck == '?':
+            out = self._nextGuess()
             self.callback(self)
-            # if self.guessCheck == '?':
-            #     continue
-            return g
 
-        return ''
+        return out
 
     def getStartGuesses(self, length, reversed=True):
         global wordDict
