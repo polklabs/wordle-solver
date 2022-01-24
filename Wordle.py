@@ -4,7 +4,6 @@ from FiveLetters import wordDictionary
 class Wordle:
     def __init__(self):
         self.wordDict = dict()
-        self.failCount = 0
         self.guess = ''
         self.word = ''
         self.t = 0
@@ -48,7 +47,8 @@ class Wordle:
             # Solve with known input
             # print(str(t+1) + ': ' + guess)
             if wordle.guess == wordle.word:
-                return ''
+                wordle.guessCheck = output
+                return
 
             # Get all words that aren't exactly correct
             outTemp = ''
@@ -74,6 +74,7 @@ class Wordle:
         if self.guessCheck == '':
             if self.t > 5:
                 self.fail = True
+                # print(self.word)
             return ''
 
         for i in range(len(self.guess)):
@@ -190,7 +191,7 @@ if __name__ == "__main__":
 
     word = input("Enter 5 Letter Word or ENTER for unknown: ")
     word = word.lower()
-    wordle.main()
+    wordle.main("", word)
     while wordle.GetNextGuess() != '':
         pass
     print('Fail:' + str(wordle.fail))

@@ -9,3 +9,6 @@ Run WordleTest.py for initial word testing purposes.
 
 # Compiling
 py -m PyInstaller --noconsole --onefile -i "icon.ico" -n "Wordle Solver" .\WordleGUI.py
+
+# TODO
+Allow skipping for from GUI
