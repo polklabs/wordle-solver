@@ -98,6 +98,7 @@ class Wordle:
 
             self.guess = g
             self.guessIndex = i+1
+            self.previous.add(g)
             return g
         return ''
 
@@ -116,8 +117,6 @@ class Wordle:
             elif self.guessCheck[i].islower():
                 if char not in self.include:
                     self.include += char
-
-        self.previous.add(self.guess)
 
         self.guessRegex = ''
         for i in range(len(self.guess)):
