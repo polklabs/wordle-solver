@@ -11,6 +11,7 @@ def tryWord(guess):
     size = len(guess)
     failedCount = 0
     i = 0
+    t = 0
     # for word in wordle.wordDict[size]:
     for word in tqdm(wordDictionary):
         wordle = Wordle()
@@ -21,9 +22,11 @@ def tryWord(guess):
         if wordle.fail and i < 6779:
             failedCount += 1
         i += 1
+        t += wordle.t
     # errorRate = failedCount/len(wordle.wordDict[size])*100
     errorRate = failedCount/6779*100
     print(guess + ' - Failed: ' + str(round(errorRate, 2)) + '%')
+    print(guess + ' - T Avg: ' + str(round(t/len(wordDictionary), 2)))
     return [errorRate, guess]
 
 def CalcUnknownWords(size=5):
@@ -58,17 +61,6 @@ def CalcUnknownWords(size=5):
     print('Best starting words')
     print(results)
 
-def GenerateDict(filenames, wordSize=5):
-    wordle = Wordle()
-    for d in filenames:
-        wordle.loadDictionary(wordSize, d, 1)
-    wordle.formatDictionary()
-
-    with open('FiveLetters.py', 'w') as f:
-        f.write('wordDictionary = ' + json.dumps(wordle.wordDict[wordSize], indent=2))
-
 if __name__ == "__main__":
-    # tryWord('about')
     # tryWord('plumb')
-    # CalcUnknownWords()
-    GenerateDict(['SUBTLEXus74286wordstextversion.txt', 'words_alpha.txt'])
+    CalcUnknownWords()

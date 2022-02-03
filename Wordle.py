@@ -12,10 +12,9 @@ class Wordle:
         self.exclude = ""
         self.include = ""
         self.fail = False
-        self.initialGuesses = ['plumb', 'wight', 'seron', 'jacky']
+        self.initialGuesses = ['plumb', 'wight', 'seron', 'jacky']#['pacts', 'frond', 'belly', 'whizz']
         self.guesses = []
         self.guessRegex = ''
-        self.guessIndex = 0
 
     def loadDictionary(self, wordSize, filename, skip=0):
         with open(filename, 'r') as f:
@@ -74,8 +73,7 @@ class Wordle:
         wordle.guessCheck = output
 
     def _nextGuess(self):
-        for i in range(self.guessIndex, len(self.guesses)):
-            self.guessIndex = i
+        for i in range(len(self.guesses)):
             g = self.guesses[i]
 
             # Make sure we aren't guessing the same word again
@@ -97,9 +95,9 @@ class Wordle:
                 continue
 
             self.guess = g
-            self.guessIndex = i+1
             self.previous.add(g)
             return g
+        self.fail = True
         return ''
 
     def GetNextGuess(self):
@@ -134,7 +132,7 @@ class Wordle:
         self.guessRegex = re.compile(self.guessRegex)
         self.guesses = self.initialGuesses
         # If we don't know any letters get the next starting guess
-        if self.guessCheck.count('.') != len(self.guessCheck) or len(self.guesses) == 0:
+        if self.guessCheck.count('.') != len(self.guessCheck) or len([g for g in self.guesses if g not in self.previous]) == 0:
             self.guesses = self.wordDict[len(self.guess)]
 
         self.guessIndex = 0
@@ -185,6 +183,7 @@ class Wordle:
         self.callback = callback
         self.word = word
         self.callback(self)
+        self.previous.add(self.guess)
         self.excludePos = [""]*len(self.guess)
 
 if __name__ == "__main__":
